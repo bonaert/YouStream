@@ -287,7 +287,7 @@ class MainWindow(wx.Frame):
         @param index: the new index of the current song
         @return: None
         """
-        # todo: set screeen to a loding wheel gif, so that the user know the file is loading
+        # todo: set screen to a loading wheel gif, so that the user know the file is loading
         LOADING_GIF_FILE = os.getcwd() + '/loading.gif'
         print(LOADING_GIF_FILE)
         self.load_file(LOADING_GIF_FILE, loop=True)
@@ -334,7 +334,8 @@ class MainWindow(wx.Frame):
         """
         Tries to load the file in the media player (quits current m.p., starts a new one
         and loads the file from the path). If there is an error, build an error message box.
-        @param path: the path of the file
+        @param path: the path of the file.
+        @param loop: the looping flag.
         @return: None
         """
         path = str(path)
