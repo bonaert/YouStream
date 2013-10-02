@@ -13,7 +13,6 @@ DEFAULT_WIDTH = 1000
 DEFAULT_HEIGHT = 1000
 
 
-#noinspection PyUnusedLocal
 class MainWindow(wx.Frame):
     def __init__(self, directory=None):
         super(MainWindow, self).__init__(parent=None, title="YouStream",
@@ -276,28 +275,49 @@ class MainWindow(wx.Frame):
         """
         print("Video being downloaded: ", self.downloader.get_downloading_video_path())
         print("Video being played:", self.video_being_played)
-        #todo: if song was downloaded, try prefetching song after it
         # Will be needed when move more than by 1
         self.download_if_needed_wait_and_watch_video(self.index_of_song_being_watched + change)
 
     def download_if_needed_wait_and_watch_video(self, index):
         """
-        If the video is not downloaded yet and we aren't downloading it, begin the download.
-        Then set the index to the correct value and watch the new video.
-        @param index: the new index of the current song
-        @return: None
-        """
+                If the video is not downloaded yet and we aren't downloading it, begin the download.
+                Then set the index to the correct value and watch the new video.
+                @param index: the new index of the current song
+                @return: None
+                """
         # todo: set screen to a loading wheel gif, so that the user know the file is loading
+        # Completed  ->  todo: if song was downloaded, try prefetching song after it
         LOADING_GIF_FILE = os.getcwd() + '/loading.gif'
         print(LOADING_GIF_FILE)
-        self.load_file(LOADING_GIF_FILE, loop=True)
+        #self.load_file(LOADING_GIF_FILE, loop=True)
         if not self.is_song_already_downloaded(index) and self.index_of_song_being_downloaded != index:
             print("Didn't download song yet. Index: ", index)
             self.downloader.skip_download_of_song()
             self.download_song(index)
+        else:
+            self.try_prefetching_next_song(index)
 
         self.index_of_song_being_watched = index
         self.wait_while_file_is_small_and_watch_song_being_downloaded()
+
+    def try_prefetching_next_song(self, index):
+        """
+        Given an index, tries to prefetch the songs after it. To do this, it search each one
+        in ascending order. When it stumbles on an undownloaded song, it begins to download that one.
+        If the downloader was already downloading one of these songs, it does nothing
+        @param index:
+        """
+        NUM_SONGS = 2
+        if index < self.index_of_song_being_downloaded < index + NUM_SONGS:
+            return
+
+        self.downloader.skip_download_of_song()
+        for song_to_download_index in range(index, index + NUM_SONGS + 1):
+            if not self.downloader.is_song_already_downloaded(song_to_download_index):
+                self.downloader.skip_download_of_song()
+                self.download_song(song_to_download_index)
+                return
+
 
     def wait_while_file_is_small_and_watch_song_being_downloaded(self):
         """
@@ -431,7 +451,7 @@ class MainWindow(wx.Frame):
         print("Play")
 
         if self.paused:
-            self.mediaPlayer.Pause()
+            self.mediaPlayer.Pause()  # Strangely, this method toggles the pause attribute (bad name)
         self.paused = False
 
     def on_pause(self, evt):
