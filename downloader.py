@@ -29,7 +29,7 @@ class Downloader(object):
         self.last_video_finished_filepath = None
 
         self.downloaded_songs_indices = set()
-        self.downloaded_songs_paths = {}
+        self.downloaded_songs_paths = { }
 
         self.pool = None
         self.download_subprocess = None
@@ -213,7 +213,7 @@ class Downloader(object):
         # '.part' for when videos are still being downloaded
         extensions = ['.mp4', '.flv', '.webm',
                       '.mp4.part', '.flv.part', '.webm.part']
-                      # youtube-dl adds .part when file is still downloading
+        # youtube-dl adds .part when file is still downloading
 
         # Fixes bug where ' would be used by youtube-dl and " by OS
         title_escaped = string.replace(title, '"', "'")

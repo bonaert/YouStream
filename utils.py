@@ -108,11 +108,11 @@ def get_metadata_from_entry(entry):
     @param entry:
     @return:
     """
-    return {'author': try_to_get_attribute(entry, 'author', 0, 'name', '$t'),
-            'name': try_to_get_attribute(entry, 'media$group', 'media$title', '$t'),
-            'url': try_to_get_attribute(entry, 'link', 0, 'href'),
-            'date': try_to_get_attribute(entry, 'updated', '$t'),
-            'length': get_length_from_metadata_entry(entry)}
+    return { 'author': try_to_get_attribute(entry, 'author', 0, 'name', '$t'),
+             'name': try_to_get_attribute(entry, 'media$group', 'media$title', '$t'),
+             'url': try_to_get_attribute(entry, 'link', 0, 'href'),
+             'date': try_to_get_attribute(entry, 'updated', '$t'),
+             'length': get_length_from_metadata_entry(entry) }
 
 
 def get_metadata(json_file):
