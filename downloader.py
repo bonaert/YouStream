@@ -29,7 +29,7 @@ class Downloader(object):
         self.last_video_finished_filepath = None
 
         self.downloaded_songs_indices = set()
-        self.downloaded_songs_paths = { }
+        self.downloaded_songs_paths = {}
 
         self.pool = None
         self.download_subprocess = None
@@ -117,6 +117,7 @@ class Downloader(object):
         @param size: the minimum size
         @return: None
         """
+        # todo: if file is smaller that minimum size, must also return when it ended
         while self.is_downloading_now and (not os.path.exists(path) or os.path.getsize(path) < size):
             time.sleep(0.3)
             print("Too small")
@@ -127,6 +128,8 @@ class Downloader(object):
         @param url: the url of the song.
         @return: the title of the song.
         """
+        # todo: there is discrepancy between title returned by this process
+        # todo: and the title written on disk. Must find out why
         title = subprocess.check_output(['youtube-dl', '-e', url])
         return title.strip()
 
