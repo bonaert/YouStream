@@ -19,6 +19,7 @@ class MainWindow(wx.Frame):
                                          size=(DEFAULT_WIDTH, DEFAULT_HEIGHT))
         self.downloader = None
         self.pool = None
+        self.current_func_pool = None
         self.is_downloading = False
         self.file_being_downloaded = None
         self.index_of_song_being_downloaded = 0
@@ -173,6 +174,10 @@ class MainWindow(wx.Frame):
         self.search_terms_input = wx.TextCtrl(self.panel)
         search_button = wx.Button(self.panel, label='Watch')
         self.Bind(wx.EVT_BUTTON, self.on_search, search_button)
+
+        # todo: currently doesn't work. Pressing a key has no effect
+        # todo: also we must do this only for the return key, not just any key pressed
+        # todo: becayse otherwise we simply would search at every keystroke
         self.Bind(wx.EVT_KEY_DOWN, self.on_search, self.search_terms_input)
 
         # Add controls to sizer
@@ -213,7 +218,7 @@ class MainWindow(wx.Frame):
         if self.playing and self.length:
             try:
                 self.gauge_bar_offset = self.mediaPlayer.time_pos
-            except AttributeError as e:
+            except AttributeError:
                 # Hack when media player doesnt work (ALWAYS !!!!!) The value is 0.1s because that is the timer offset
                 self.gauge_bar_offset += 0.1
 
@@ -241,7 +246,10 @@ class MainWindow(wx.Frame):
         @param index: index of the song.
         @return: true if the song has already been downloaded, else returns false.
         """
-        return self.downloader.is_song_already_downloaded(index)
+        # In case this line is triggered before the download started, we check that it is not None
+        # This can be the case because the download is asynchronous and takes
+        # some time to start
+        return self.downloader and self.downloader.is_song_already_downloaded(index)
 
     def fetch_next_song(self):
         """
@@ -276,7 +284,8 @@ class MainWindow(wx.Frame):
         print("Video being downloaded: ", self.downloader.get_downloading_video_path())
         print("Video being played:", self.video_being_played)
         # Will be needed when move more than by 1
-        self.download_if_needed_wait_and_watch_video(self.index_of_song_being_watched + change)
+        self.run_function_assychronously(self.download_if_needed_wait_and_watch_video,
+                                         self.index_of_song_being_watched + change)
 
     def download_if_needed_wait_and_watch_video(self, index):
         """
@@ -297,6 +306,7 @@ class MainWindow(wx.Frame):
             self.downloader.skip_download_of_song()
             self.download_song(index)
         else:
+            print("Hello")
             self.try_prefetching_next_song(index)
 
         self.index_of_song_being_watched = index
@@ -363,8 +373,11 @@ class MainWindow(wx.Frame):
         path = str(path)
         try:
             print("Playing: ", path)
-            self.mediaPlayer.Quit()
-            self.mediaPlayer.Start()
+            if not self.mediaPlayer:
+                # todo: don't forget to see what this line was for
+                # todo: make notes about decisions
+                # self.mediaPlayer.Quit()
+                self.mediaPlayer.Start()
             self.mediaPlayer.Loadfile(path)
             if loop:
                 self.mediaPlayer.Loop(0)
@@ -410,6 +423,25 @@ class MainWindow(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
 
+    def start_with_new_search_terms(self):
+        searchTerms = self.search_terms_input.GetValue()
+        searchTermsTokens = searchTerms.split()
+        if self.is_watching:
+            self.downloader.skip_download_of_song()
+            self.playing = False
+            self.video_being_played = None
+            self.number_of_songs_predownloaded = 0
+            self.is_downloading = False
+            self.length = None
+            print("Stopping current download.")
+        print("Starting next download.")
+        self.start_downloader(searchTermsTokens)
+        print("Started downloading next song.")
+        self.download_if_needed_wait_and_watch_video(index=0)
+        self.is_watching = True
+        print("Started to watch the next song.")
+        time.sleep(2)
+
     def on_search(self, evt):
         # Todo: search if event is press on button or keypress on the return key
         """
@@ -420,25 +452,7 @@ class MainWindow(wx.Frame):
         @param evt: the event
         @return: None
         """
-        searchTerms = self.search_terms_input.GetValue()
-        searchTermsTokens = searchTerms.split()
-
-        if self.is_watching:
-            self.downloader.skip_download_of_song()
-            self.playing = False
-            self.video_being_played = None
-            self.number_of_songs_predownloaded = 0
-            self.is_downloading = False
-            self.length = None
-            print("Stopping current download.")
-
-        self.is_watching = True
-        print("Starting next download.")
-        self.start_downloader(searchTermsTokens)
-        print("Started downloading next song.")
-        self.download_if_needed_wait_and_watch_video(index=0)
-        print("Started to watch the next song.")
-        time.sleep(2)
+        self.run_function_assychronously(self.start_with_new_search_terms)
 
     # todo: make buttons usable immediately, that is, do action on asynchronous thread
     # todo: for 'next' button
@@ -512,16 +526,19 @@ class MainWindow(wx.Frame):
         if not self.paused:
             self.update_gauge()
 
-        self.is_downloading = self.is_watching and self.downloader.is_downloading()
+        # In case this line is triggered before the download started, we check that it is not None
+        # This can be the case because the download is asynchronous and takes
+        # some time to start
+        self.is_downloading = self.is_watching and self.downloader and self.downloader.is_downloading()
 
         # If download stopped and we were not playing the video, mark it as ready for later use
         if self.is_watching:
 
-            if not self.is_downloading and self.number_of_songs_predownloaded <= 2:
+            if self.downloader and not self.is_downloading and self.number_of_songs_predownloaded <= 2:
                 print("Downloading next song")
                 self.fetch_next_song()
 
-            if not self.playing:
+            if self.is_watching and not self.playing and self.downloader:
                 print("Watching next song")
                 self.download_if_needed_wait_and_watch_video(self.index_of_song_being_watched + 1)
 
@@ -551,7 +568,20 @@ class MainWindow(wx.Frame):
 
         return directory
 
+    def run_function_assychronously(self, function, *args, **kwargs):
+        print(args, kwargs)
+        self.try_to_terminate_previous_pool()
+        self.current_func_pool = ThreadPool(processes=1)
+        self.current_func_pool.apply_async(function, args, kwargs)
+
+    def try_to_terminate_previous_pool(self):
+        if self.current_func_pool:
+            self.current_func_pool.terminate()
+        self.current_func_pool = None
+
 
 app = wx.App(False)
 frame = MainWindow()
 app.MainLoop()
+
+#todo: on watch also
