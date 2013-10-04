@@ -286,6 +286,8 @@ class MainWindow(wx.Frame):
                 @return: None
                 """
         # todo: set screen to a loading wheel gif, so that the user know the file is loading
+        # todo: problem -> media player doesn't loop. Setting mpc.Loop(0) has no effect
+        # todo: maybe must try different format. Possible problem: file is a GIF. Try avi or mp4.
         # Completed  ->  todo: if song was downloaded, try prefetching song after it
         LOADING_GIF_FILE = os.getcwd() + '/loading.gif'
         print(LOADING_GIF_FILE)
