@@ -29,7 +29,7 @@ class Downloader(object):
         self.last_video_finished_filepath = None
 
         self.downloaded_songs_indices = set()
-        self.downloaded_songs_paths = {}
+        self.downloaded_songs_paths = { }
 
         self.pool = None
         self.download_subprocess = None
@@ -37,35 +37,44 @@ class Downloader(object):
         # Since we have already the first 10
         self.index_of_next_songs_to_download = 11
 
-    def get_new_songs_metadata(self):
-        """
-        Gets the metadata of the next 10 songs.
-        @return: the metadata
-        """
+    def get_next_10_songs_metadata(self):
         metadata = utils.get_songs_metadata(self.search_terms, self.index_of_next_songs_to_download)
         self.index_of_next_songs_to_download += 10
         return metadata
 
-    def choose_next_song_url(self):
-        """
-        Try to get the next url. If not enough metadata, try to download more.
-        If success, return the next url. Otherwise return None.
-        @return: the url of the next song. (None if none can be found)
-        """
-        # Can at most be one more
-        try:
+    def add_next_10_songs_metadata(self):
+        new_metadata = self.get_next_10_songs_metadata()
+        self.songs_metadata.extend(new_metadata)
+
+        if new_metadata:
             url = self.songs_metadata[self.current_song_index]['url']
-        except IndexError:
-            new_metadata = self.get_new_songs_metadata()
-            self.songs_metadata.extend(new_metadata)
+        else:
+            url = None
 
-            if new_metadata:
-                url = self.songs_metadata[self.current_song_index]['url']
-            else:
-                url = None
+    def need_to_get_metadata(self):
+        return len(self.songs_metadata) > self.current_song_index and \
+               self.songs_metadata[self.current_song_index].has_key('url')
 
-        print("Url: ", url)
-        return url
+    def is_next_song_to_download(self):
+        return not self.need_to_get_metadata()
+
+    def get_current_song_url(self):
+        return self.songs_metadata[self.current_song_index]['url']
+
+    def get_song_url(self):
+        if self.is_next_song_to_download():
+            return self.get_current_song_url()
+        else:
+            return None
+
+    def get_next_song_url(self):
+        """
+        @return: The url of the next song. (None if none can be found)
+        """
+        if self.need_to_get_metadata():
+            self.add_next_10_songs_metadata()
+
+        return self.get_song_url()
 
     def download_song(self, index, is_prefetching=False):
         #todo: return signal if no extra song can be downloaded
@@ -77,7 +86,7 @@ class Downloader(object):
         @return: None
         """
         self.current_song_index = index
-        url = self.choose_next_song_url()
+        url = self.get_next_song_url()
         print("Got url:", url)
 
         if url is None:
