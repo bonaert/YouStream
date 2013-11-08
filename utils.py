@@ -44,31 +44,6 @@ def get_length_from_metadata_entry(entry):
     return None
 
 
-def get_all_urls(json_file, max_length=120):
-    """
-    Given a processes json file (dictionary), tries to extract all the urls
-    @param json_file: the json file
-    @param max_length: the maximum length of the video
-    @return: the urls found
-    """
-    feed = json_file['feed']
-    urls = []
-
-    metadata_entries = feed.get('entry', [])
-    for entry in metadata_entries:
-        #length = get_length(entry)
-
-        # length is in seconds while max_length is in minutes
-        #if 0 < length <= max_length * 60:
-        try:
-            url = entry['link'][0]['href']
-            urls.append(url)
-        except AttributeError:
-            pass
-
-    return urls
-
-
 def entries(json_file):
     """
     Returns the entries found in the Json file.
