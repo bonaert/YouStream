@@ -52,13 +52,31 @@ class Video:
             return None
 
     def download(self):
-        pass
+        raise NotImplementedError
 
     def prefetch(self):
-        pass
+        raise NotImplementedError
 
     def stop_downloading(self):
-        pass
+        raise NotImplementedError
 
     def get_index(self):
-        pass
+        raise NotImplementedError
+
+    def is_file_size_greater_than(self, size):
+        raise NotImplementedError
+
+    def get_song_path(self):
+        raise NotImplementedError
+
+    def get_downloading_song_path(self):
+        raise NotImplementedError
+
+    def is_downloading(self):
+        raise NotImplementedError
+
+    def has_been_downloaded(self):
+        raise NotImplementedError
+
+    def get_file_size(self):
+        raise NotImplementedError
