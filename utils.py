@@ -44,7 +44,7 @@ def get_length_from_metadata_entry(entry):
     return None
 
 
-def entries(json_file):
+def get_entries(json_file):
     """
     Returns the entries found in the Json file.
     @param json_file: the json file
@@ -96,7 +96,7 @@ def get_metadata(json_file):
     @param json_file: the json file
     @return: all the video metadata found in the json file.
     """
-    return [get_metadata_from_entry(entry) for entry in entries(json_file)]
+    return [get_metadata_from_entry(entry) for entry in get_entries(json_file)]
 
 
 def get_songs_metadata(search_terms, start_index=1, max_results=10):
