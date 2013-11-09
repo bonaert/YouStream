@@ -29,7 +29,7 @@ class Downloader(object):
         self.last_video_finished_filepath = None
 
         self.downloaded_songs_indices = set()
-        self.downloaded_songs_paths = { }
+        self.downloaded_songs_paths = {}
 
         self.pool = None
         self.download_subprocess = None
@@ -46,14 +46,9 @@ class Downloader(object):
         new_metadata = self.get_next_10_songs_metadata()
         self.songs_metadata.extend(new_metadata)
 
-        if new_metadata:
-            url = self.songs_metadata[self.current_song_index]['url']
-        else:
-            url = None
-
     def need_to_get_metadata(self):
         return len(self.songs_metadata) > self.current_song_index and \
-               self.songs_metadata[self.current_song_index].has_key('url')
+            'url' in self.songs_metadata[self.current_song_index]
 
     def is_next_song_to_download(self):
         return not self.need_to_get_metadata()
