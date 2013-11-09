@@ -5,13 +5,14 @@ import subprocess
 
 from multiprocessing.pool import ThreadPool
 
+
 class Video(object):
     def __init__(self, metadata_entry, index, directory, max_download_rate=200):
-        self.author = self.get_author(metadata_entry)
-        self.title = self.get_title(metadata_entry)
-        self.url = self.get_url(metadata_entry)
-        self.date = self.get_date(metadata_entry)
-        self.length = self.get_length(metadata_entry)
+        self.author = self.get_author_from_metadata(metadata_entry)
+        self.title = self.get_title_from_metadata(metadata_entry)
+        self.url = self.get_url_from_metadata(metadata_entry)
+        self.date = self.get_date_from_metadata(metadata_entry)
+        self.length = self.get_length_from_metadata(metadata_entry)
         self.index = index
 
         self.is_downloading = False
@@ -24,19 +25,19 @@ class Video(object):
         self.directory = directory
         self.file_path = None
 
-    def get_author(self, metadata_entry):
+    def get_author_from_metadata(self, metadata_entry):
         return self.try_to_get_attribute(metadata_entry, 'author', 0, 'name', '$t')
 
-    def get_title(self, metadata_entry):
+    def get_title_from_metadata(self, metadata_entry):
         return self.try_to_get_attribute(metadata_entry, 'media$group', 'media$title', '$t')
 
-    def get_url(self, metadata_entry):
+    def get_url_from_metadata(self, metadata_entry):
         return self.try_to_get_attribute(metadata_entry, 'link', 0, 'href')
 
-    def get_date(self, metadata_entry):
+    def get_date_from_metadata(self, metadata_entry):
         return self.try_to_get_attribute(metadata_entry, 'updated', '$t')
 
-    def get_length(self, metadata_entry):
+    def get_length_from_metadata(self, metadata_entry):
         length = self.try_to_get_attribute(metadata_entry, 'media$group', 'yt$duration', 'seconds')
         if length:
             return int(length)
@@ -70,6 +71,15 @@ class Video(object):
     def get_index(self):
         return self.index
 
+    def get_url(self):
+        return self.url
+
+    def get_title(self):
+        return self.title
+
+    def get_length(self):
+        return self.length
+
     def download(self):
         if not self.is_downloaded:
             self.start_download()
@@ -77,10 +87,10 @@ class Video(object):
     def start_download(self):
         self.is_downloading = True
         self.pool = ThreadPool(processes=1)
-        self.pool.apply_async(self.download_song, callback=self.close_subprocess)
+        self.pool.apply_async(self.download_video, callback=self.close_subprocess)
         self.pool.close()
 
-    def download_song(self):
+    def download_video(self):
         self.file_path = self.get_incomplete_file_path()
         print("Got path:", self.file_path)
 
@@ -141,7 +151,7 @@ class Video(object):
             time.sleep(interval)
             print("File is still too small")
 
-    def get_song_path(self):
+    def get_video_path(self):
         self.check_download_has_started()
         return self.file_path
 
