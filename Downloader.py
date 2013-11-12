@@ -33,6 +33,18 @@ class Downloader(object):
     def is_downloading(self):
         return self.current_video and self.current_video.is_downloading()
 
+    def get_current_video_url(self):
+        return self.current_video.get_url()
+
+    def get_current_video_file_path(self):
+        return self.current_video.get_video_path()
+
+    def get_current_video_title(self):
+        return self.current_video.get_title()
+
+    def get_current_video_length(self):
+        return self.current_video.get_length()
+
     def set_prefetching_download_speed(self):
         self.prefetch = True
 
@@ -40,10 +52,16 @@ class Downloader(object):
         self.prefetch = False
 
     def download_next_video(self):
-        self.current_video_index += 1
-        self.download_video()
+        self.download_video_with_index(self.current_video_index + 1)
 
-    def download_video(self):
+    def download_video_with_index(self, index):
+        if index < 0:
+            raise Exception("Negative index: %d" % index)
+
+        self.current_video_index = index
+        self.download_current_video()
+
+    def download_current_video(self):
         video = self.get_video()
         video.download()
 
@@ -60,23 +78,12 @@ class Downloader(object):
         if self.is_downloading():
             self.current_video.stop_downloading()
 
-    def download(self, index):
-        pass
-
-    def start_prefetching_future_videos(self):
-        pass
-
     def is_there_video_to_download(self):
-        pass
+        if not self.must_get_new_videos():
+            return True
 
-    def get_current_video_url(self):
-        return self.current_video.get_url()
-
-    def get_current_video_file_path(self):
-        return self.current_video.get_video_path()
-
-    def get_current_video_title(self):
-        return self.current_video.get_title()
-
-    def get_current_video_length(self):
-        return self.current_video.get_length()
+        new_videos = self.get_next_10_videos()
+        if new_videos:
+            self.videos.extend(new_videos)
+        else:
+            return False
