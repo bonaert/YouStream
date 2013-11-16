@@ -80,6 +80,10 @@ class Video(object):
     def get_length(self):
         return self.length
 
+    def get_file_path(self):
+        self.check_download_has_started()
+        return self.file_path
+
     def download(self):
         if not self.is_downloaded:
             self.start_download()
@@ -151,13 +155,6 @@ class Video(object):
             time.sleep(interval)
             print("File is still too small")
 
-    def get_video_path(self):
-        self.check_download_has_started()
-        return self.file_path
-
-    def is_downloading(self):
-        return self.is_downloading
-
     def has_been_downloaded(self):
         return self.is_downloaded
 
@@ -168,3 +165,6 @@ class Video(object):
     def check_download_has_started(self):
         if not (self.is_downloaded or self.is_downloading):
             raise Exception("Download has not started")
+
+    def has_file_been_created(self):
+        return self.is_downloading or self.is_downloaded
