@@ -188,7 +188,7 @@ class Player(wx.Frame):
         is_first_song = self.is_playing_first_song()
         if not is_first_song:
             self.start_download(self.current_song_index - 1)
-            self.play_current_song_when_big_enough()
+            self.play_current_video_when_big_enough()
 
     def on_pause(self, evt):
         self.media_player.pause()
@@ -201,13 +201,13 @@ class Player(wx.Frame):
 
     def on_next(self, evt):
         self.start_download(self.current_song_index + 1)
-        self.play_current_song_when_big_enough()
+        self.play_current_video_when_big_enough()
 
     def on_search(self, evt):
         search_terms = self.get_search_terms()
         self.downloader = self.build_downloader(search_terms)
         self.download_first_video()
-        self.play_current_song_when_big_enough()
+        self.play_current_video_when_big_enough()
 
     def on_timer(self, evt):
         pass
@@ -235,6 +235,10 @@ class Player(wx.Frame):
     def get_search_terms(self):
         return self.search_terms_input.GetValue()
 
+    def play_current_video_when_big_enough(self):
+        self.downloader.wait_while_video_is_small()
+        path = self.downloader.get_current_video_file_path()
+        self.play_file(path)
 
 
 
@@ -256,6 +260,7 @@ class Player(wx.Frame):
 
     def is_playing_first_song(self):
         return self.current_song_index == 0
+
 
 
 app = wx.App(False)
