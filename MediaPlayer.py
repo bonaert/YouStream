@@ -30,6 +30,11 @@ class MediaPlayer(object):
         self.media_player.Seek(0, type_=1)
 
     def play_file(self, path):
+        #if not self.mediaPlayer:
+        # todo: don't forget to see what this line was for
+        # todo: make notes about decisions
+        # self.mediaPlayer.Quit()
+        #self.mediaPlayer.Start()
         self.media_player.Loadfile(path)
         self.current_video_path = path
         self.is_playing = True
