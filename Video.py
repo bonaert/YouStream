@@ -150,7 +150,7 @@ class Video(object):
         self.check_download_has_started()
         self.wait_while_file_is_smaller_than(size)
 
-    def wait_while_file_is_smaller_than(self, size, interval=0.3):
+    def wait_while_file_is_smaller_than(self, size, interval=0.2):
         while not self.is_downloaded and not self.is_file_size_greater_than(self.file_path, size):
             time.sleep(interval)
             print("File is still too small")
