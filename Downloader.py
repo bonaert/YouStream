@@ -20,7 +20,7 @@ class Downloader(object):
     def get_next_10_videos(self):
         videos = []
 
-        start_index = self.get_number_of_videos()
+        start_index = self.get_current_number_of_videos()
         entries = self.get_entries(start_index)
 
         for (index, entry) in enumerate(entries, start_index):
@@ -29,7 +29,7 @@ class Downloader(object):
 
         return videos
 
-    def get_number_of_videos(self):
+    def get_current_number_of_videos(self):
         try:
             return len(self.videos)
         except AttributeError:
@@ -128,7 +128,7 @@ class Downloader(object):
         return self.videos[index].wait_while_file_is_small(size)
 
     def wait_while_current_video_is_small(self, size=DEFAULT_SIZE):
-        return self.current_video.wait_while_file_is_small(size)
+        self.current_video.wait_while_file_is_small(size)
 
     def destroy(self):
         self.stop_download()
