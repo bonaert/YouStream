@@ -3,6 +3,7 @@ import os
 import wx
 
 import MplayerCtrl as mpc
+from Downloader import Downloader
 from MediaPlayer import MediaPlayer
 import utils
 
@@ -26,7 +27,6 @@ class Player(wx.Frame):
 
         # Player
         self.is_watching = False
-        self.is_playing = False
         self.video_being_played = None
         self.index_of_song_being_watched = 0
         self.length = None
@@ -172,14 +172,12 @@ class Player(wx.Frame):
         dialog.Destroy()
 
     def on_media_started(self, evt):
-        self.is_playing = True
         self.gauge_bar_offset = 0
         self.length = self.downloader.get_current_video_length()
         self.gauge_bar.SetRange(self.length)
         print("Length of file: %d" % self.length)
 
     def on_media_finished(self, evt):
-        self.is_playing = False
         self.length = float('infinity')
 
     def on_exit(self, evt):
@@ -187,9 +185,9 @@ class Player(wx.Frame):
         self.Close(True)
 
     def on_previous(self, evt):
-        is_first_song = self.current_song_index == 0
+        is_first_song = self.is_playing_first_song()
         if not is_first_song:
-            self.start_downloading_if_needed(self.current_song_index - 1)
+            self.start_download(self.current_song_index - 1)
             self.play_current_song_when_big_enough()
 
     def on_pause(self, evt):
@@ -202,17 +200,23 @@ class Player(wx.Frame):
         self.media_player.reset()
 
     def on_next(self, evt):
-        self.start_downloading_if_needed(self.current_song_index + 1)
+        self.start_download(self.current_song_index + 1)
         self.play_current_song_when_big_enough()
-
-    def on_timer(self, evt):
-        pass
 
     def on_search(self, evt):
         search_terms = self.get_search_terms()
         self.downloader = self.build_downloader(search_terms)
         self.download_first_video()
         self.play_current_song_when_big_enough()
+
+    def on_timer(self, evt):
+        pass
+
+
+
+
+
+    # Media player
 
     def is_video_playing(self):
         return self.media_player.is_playing()
@@ -230,6 +234,28 @@ class Player(wx.Frame):
 
     def get_search_terms(self):
         return self.search_terms_input.GetValue()
+
+
+
+
+    # Downloader
+
+    def build_downloader(self, search_terms):
+        return Downloader(search_terms, self.directory)
+
+    def download_first_video(self):
+        self.downloader.download_video_with_index(0)
+
+    def start_download(self, index):
+        self.downloader.download_video_with_index(index)
+
+
+
+
+    # Getters and setters
+
+    def is_playing_first_song(self):
+        return self.current_song_index == 0
 
 
 app = wx.App(False)
