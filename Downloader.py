@@ -74,13 +74,13 @@ class Downloader(object):
         self.download_current_video()
 
     def download_current_video(self):
-        video = self.get_video()
+        video = self.get_current_video()
         self.current_video = video
 
         if not video.has_been_downloaded():
             video.download()
 
-    def get_video(self):
+    def get_current_video(self):
         if self.must_get_new_videos():
             self.videos.extend(self.get_next_10_videos())
 
