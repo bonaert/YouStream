@@ -284,7 +284,7 @@ class MainWindow(wx.Frame):
         print("Video being downloaded: ", self.downloader.get_downloading_video_path())
         print("Video being played:", self.video_being_played)
         # Will be needed when move more than by 1
-        self.run_function_assychronously(self.download_if_needed_wait_and_watch_video,
+        self.run_function_asychronously(self.download_if_needed_wait_and_watch_video,
                                          self.index_of_song_being_watched + change)
 
     def download_if_needed_wait_and_watch_video(self, index):
@@ -452,7 +452,7 @@ class MainWindow(wx.Frame):
         @param evt: the event
         @return: None
         """
-        self.run_function_assychronously(self.start_with_new_search_terms)
+        self.run_function_asychronously(self.start_with_new_search_terms)
 
     # todo: make buttons usable immediately, that is, do action on asynchronous thread
     # todo: for 'next' button
@@ -568,7 +568,7 @@ class MainWindow(wx.Frame):
 
         return directory
 
-    def run_function_assychronously(self, function, *args, **kwargs):
+    def run_function_asychronously(self, function, *args, **kwargs):
         print(args, kwargs)
         self.try_to_terminate_previous_pool()
         self.current_func_pool = ThreadPool(processes=1)
