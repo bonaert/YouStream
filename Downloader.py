@@ -2,6 +2,8 @@
 from Video import Video
 import utils
 
+DEFAULT_SIZE = 1 * 1024 ** 2  # 1 MB
+
 
 class Downloader(object):
     def __init__(self, search_terms, directory):
@@ -116,21 +118,17 @@ class Downloader(object):
         return self.videos[index].get_file_path()
 
     def check_index(self, index):
-        print("0 < %d < %d" % (index, len(self.videos)))
         if not (0 <= index < len(self.videos)):
-            print "Cream"
             raise Exception("Invalid index: %d" % index)
         else:
-            print "Good index"
+            print("0 < %d < %d" % (index, len(self.videos)))
 
-    def wait_while_video_is_small(self, index, size):
+    def wait_while_video_is_small(self, index, size=DEFAULT_SIZE):
         self.check_index(index)
         return self.videos[index].wait_while_file_is_small(size)
 
-    def wait_while_current_video_is_small(self, size):
+    def wait_while_current_video_is_small(self, size=DEFAULT_SIZE):
         return self.current_video.wait_while_file_is_small(size)
 
     def destroy(self):
         self.stop_download()
-
-
