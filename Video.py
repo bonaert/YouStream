@@ -131,7 +131,9 @@ class Video(object):
         else:
             return "%dk" % (self.max_download_rate // 2)
 
-    def close_subprocess(self):
+    def close_subprocess(self, callback_arg):
+        # Callback argument is useless, but is passed by apply_assync function
+        # And so we keep it to prevent errors
         self.is_downloading = False
         self.is_downloaded = True
 
