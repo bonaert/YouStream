@@ -54,3 +54,6 @@ class MediaPlayer(object):
             return int(length)
         else:
             return 0
+
+    def destroy(self):
+        self.media_player.Quit()

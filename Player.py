@@ -175,6 +175,7 @@ class Player(wx.Frame):
         self.set_gauge_bar_empty()
 
     def on_exit(self, evt):
+        self.media_player.destroy()
         self.downloader.destroy()
         self.Close(True)
 
@@ -206,6 +207,7 @@ class Player(wx.Frame):
     def on_timer(self, evt):
         if self.is_video_playing():
             self.update_gauge()
+
 
 
 
