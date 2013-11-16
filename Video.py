@@ -94,6 +94,9 @@ class Video(object):
         self.pool.apply_async(self.download_video, callback=self.close_subprocess)
         self.pool.close()
 
+        # Allow some time for youtube-dl to start
+        time.sleep(1)
+
     def download_video(self):
         self.file_path = self.get_incomplete_file_path()
         print("Got path:", self.file_path)
@@ -144,13 +147,14 @@ class Video(object):
         raise NotImplementedError
 
     def is_file_size_greater_than(self, path, size):
-        return self.is_downloading and os.path.exists(path) and os.path.getsize(path) > size
+        return os.path.exists(path) and os.path.getsize(path) > size
 
     def wait_while_file_is_small(self, size):
         self.check_download_has_started()
         self.wait_while_file_is_smaller_than(size)
 
     def wait_while_file_is_smaller_than(self, size, interval=0.2):
+        print(self.file_path)
         while not self.is_downloaded and not self.is_file_size_greater_than(self.file_path, size):
             time.sleep(interval)
             print("File is still too small")
