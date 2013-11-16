@@ -217,7 +217,7 @@ class Player(wx.Frame):
         return self.media_player.is_video_playing()
 
     def get_search_terms(self):
-        return self.search_terms_input.GetValue()
+        return self.search_terms_input.GetValue().split()
 
     def play_current_video_when_big_enough(self):
         self.downloader.wait_while_current_video_is_small()
@@ -240,9 +240,10 @@ class Player(wx.Frame):
         return Downloader(search_terms, self.directory)
 
     def download_first_video(self):
-        self.downloader.download_video_with_index(0)
+        self.start_download(0)
 
     def start_download(self, index):
+        self.current_video_index = index
         self.downloader.download_video_with_index(index)
 
 
