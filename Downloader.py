@@ -127,6 +127,9 @@ class Downloader(object):
         self.check_index(index)
         return self.videos[index].wait_while_file_is_small(size)
 
+    def wait_while_current_video_is_small(self, size):
+        return self.current_video.wait_while_file_is_small(size)
+
     def destroy(self):
         self.stop_download()
 
