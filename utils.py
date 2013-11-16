@@ -112,3 +112,13 @@ def get_songs_metadata(search_terms, start_index=1, max_results=10):
     """
     json_file = download_json(search_terms, start_index, max_results)
     return get_metadata(json_file)
+
+
+def make_directory(directory):
+    if not directory:
+        directory = os.getcwd() + '/songs'
+
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
+    return directory
