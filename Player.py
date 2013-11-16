@@ -3,6 +3,7 @@ import os
 import wx
 
 import MplayerCtrl as mpc
+from MediaPlayer import MediaPlayer
 import utils
 
 
@@ -72,12 +73,13 @@ class Player(wx.Frame):
         playerButtonsSizer = self.make_player_button_sizer()
 
         # Add player and events
-        self.mediaPlayer = mpc.MplayerCtrl(self.panel, -1, 'mplayer')
+        mplayer_controller = mpc.MplayerCtrl(self.panel, -1, 'mplayer')
+        self.media_player = MediaPlayer(mplayer_controller)
         self.bind_events_to_media_player()
 
         # Add sizer to outer sizer
         outerBoxSizer.Add(searchInputSizer, 0, wx.ALL | wx.EXPAND, 5)
-        outerBoxSizer.Add(self.mediaPlayer, 1, wx.ALL | wx.EXPAND, 5)
+        outerBoxSizer.Add(mplayer_controller, 1, wx.ALL | wx.EXPAND, 5)
         outerBoxSizer.Add(gaugeBarSizer, 0, wx.ALL | wx.EXPAND, 5)
         outerBoxSizer.Add(playerButtonsSizer, 0, wx.BOTTOM | wx.LEFT | wx.RIGHT, 5)
 
@@ -190,13 +192,13 @@ class Player(wx.Frame):
             self.play_current_song_when_big_enough()
 
     def on_pause(self, evt):
-        self.pause_player()
+        self.media_player.pause()
 
     def on_play(self, evt):
-        self.unpause_player()
+        self.media_player.unpause()
 
     def on_reset(self, evt):
-        self.reset_player()
+        self.media_player.reset()
 
     def on_next(self, evt):
         self.start_downloading_if_needed(self.current_song_index + 1)
@@ -231,7 +233,7 @@ class Player(wx.Frame):
         # todo: make notes about decisions
         # self.mediaPlayer.Quit()
         #self.mediaPlayer.Start()
-        self.mediaPlayer.Loadfile(path)
+        self.media_player.play_file(path)
         #if loop:
         #   self.mediaPlayer.Loop(0)
 
