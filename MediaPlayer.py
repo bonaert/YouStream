@@ -42,3 +42,6 @@ class MediaPlayer(object):
     def loop_file(self, path):
         self.play_file(path)
         self.media_player.Loop(0)
+
+    def get_current_video_time(self):
+        return self.media_player.GetTimePos()
