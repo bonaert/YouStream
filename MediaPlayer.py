@@ -2,8 +2,8 @@
 
 
 class MediaPlayer(object):
-    def __init__(self, media_player):
-        self.media_player = media_player
+    def __init__(self, mplayer_controller):
+        self.media_player = mplayer_controller
         self.is_playing = False
         self.current_video_path = None
 
@@ -27,18 +27,13 @@ class MediaPlayer(object):
         self.media_player.Pause()
 
     def reset(self):
-        self.media_player.Seek(0, type_=0)
+        self.media_player.Seek(0, type_=1)
 
     def play_file(self, path):
-        print("Playing: ", path)
-        #if not self.mediaPlayer:
-        # todo: don't forget to see what this line was for
-        # todo: make notes about decisions
-        # self.mediaPlayer.Quit()
-        #self.mediaPlayer.Start()
         self.media_player.Loadfile(path)
-        #if loop:
-        #   self.mediaPlayer.Loop(0)
-
         self.current_video_path = path
         self.is_playing = True
+
+    def loop_file(self, path):
+        self.play_file(path)
+        self.media_player.Loop(0)
