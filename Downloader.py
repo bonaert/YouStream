@@ -74,7 +74,9 @@ class Downloader(object):
     def download_current_video(self):
         video = self.get_video()
         self.current_video = video
-        video.download()
+
+        if not video.has_been_downloaded():
+            video.download()
 
     def get_video(self):
         if self.must_get_new_videos():
