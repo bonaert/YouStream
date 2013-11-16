@@ -7,17 +7,18 @@ class Downloader(object):
     def __init__(self, search_terms, directory):
         self.prefetch = False
 
+        self.search_terms = search_terms
+        self.directory = directory
+
+        self.videos = []
         self.videos = self.get_next_10_videos()
         self.current_video = None
         self.current_video_index = 0
 
-        self.search_terms = search_terms
-        self.directory = directory
-
     def get_next_10_videos(self):
         videos = []
 
-        start_index = len(self.videos)
+        start_index = self.get_number_of_videos()
         entries = self.get_entries(start_index)
 
         for (index, entry) in enumerate(entries, start_index):
@@ -26,24 +27,33 @@ class Downloader(object):
 
         return videos
 
+    def get_number_of_videos(self):
+        try:
+            return len(self.videos)
+        except AttributeError:
+            return 0
+
     def get_entries(self, start_index):
         json = utils.download_json(self.search_terms, start_index)
         return utils.get_entries(json)
 
     def is_downloading(self):
-        return self.current_video and self.current_video.is_downloading()
+        return self.current_video and self.current_video.is_downloading
 
     def get_current_video_url(self):
         return self.current_video.get_url()
 
     def get_current_video_file_path(self):
-        return self.current_video.get_video_path()
+        return self.current_video.get_file_path()
 
     def get_current_video_title(self):
         return self.current_video.get_title()
 
     def get_current_video_length(self):
         return self.current_video.get_length()
+
+    def get_current_video_index(self):
+        return self.current_video_index
 
     def set_prefetching_download_speed(self):
         self.prefetch = True
@@ -63,6 +73,7 @@ class Downloader(object):
 
     def download_current_video(self):
         video = self.get_video()
+        self.current_video = video
         video.download()
 
     def get_video(self):
@@ -87,3 +98,34 @@ class Downloader(object):
             self.videos.extend(new_videos)
         else:
             return False
+
+    def is_video_already_downloaded(self, index):
+        return 0 < index < len(self.videos) and self.videos[index].has_been_downloaded()
+
+    def is_video_downloading(self, index):
+        return 0 < index < len(self.videos) and self.videos[index].is_downloading()
+
+    def get_file_path_of_video_with_index(self, index):
+        self.check_index(index)
+
+        if not self.videos[index].has_file_been_created():
+            raise Exception("File with index %d has not been created." % index)
+
+        return self.videos[index].get_file_path()
+
+    def check_index(self, index):
+        print("0 < %d < %d" % (index, len(self.videos)))
+        if not (0 <= index < len(self.videos)):
+            print "Cream"
+            raise Exception("Invalid index: %d" % index)
+        else:
+            print "Good index"
+
+    def wait_while_video_is_small(self, index, size):
+        self.check_index(index)
+        return self.videos[index].wait_while_file_is_small(size)
+
+    def destroy(self):
+        self.stop_download()
+
+
