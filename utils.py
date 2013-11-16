@@ -116,7 +116,7 @@ def get_songs_metadata(search_terms, start_index=1, max_results=10):
 
 def make_directory(directory):
     if not directory:
-        directory = os.getcwd() + '/songs'
+        directory = os.getcwd() + '/songs/'
 
     if not os.path.exists(directory):
         os.mkdir(directory)
