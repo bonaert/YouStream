@@ -7,6 +7,8 @@ from Downloader import Downloader
 from MediaPlayer import MediaPlayer
 import utils
 
+BIG_VALUE = 10 ** 8
+
 TIMER_INTERVAL = 0.1
 
 DEFAULT_WIDTH = 800
@@ -165,11 +167,12 @@ class Player(wx.Frame):
     def on_media_started(self, evt):
         self.gauge_bar_offset = 0
         self.length = self.get_current_video_length()
-        self.gauge_bar.SetRange(self.length)
+        self.adjust_gauge()
         print("Length of file: %d" % self.length)
 
     def on_media_finished(self, evt):
-        self.length = float('infinity')
+        self.length = 0
+        self.set_gauge_bar_empty()
 
     def on_exit(self, evt):
         self.downloader.destroy()
@@ -201,7 +204,8 @@ class Player(wx.Frame):
         self.play_current_video_when_big_enough()
 
     def on_timer(self, evt):
-        self.update_gauge()
+        if self.is_video_playing():
+            self.update_gauge()
 
 
 
@@ -221,11 +225,7 @@ class Player(wx.Frame):
         self.play_file(path)
 
     def play_file(self, path):
-        try:
-            self.media_player.play_file(path)
-        except IndexError as e:
-            self.raise_error_window(path)
-            print (e.message)
+        self.media_player.play_file(path)
 
     def raise_error_window(self, path):
         message = "Unable to load %s: Unsupported format?" % path
@@ -273,10 +273,26 @@ class Player(wx.Frame):
 
     def update_gauge(self):
         if self.is_video_playing():
+            self.adjust_gauge_if_needed()
             self.gauge_bar_offset = self.get_current_video_time()
             self.gauge_bar.SetValue(self.gauge_bar_offset)
 
+    def adjust_gauge_if_needed(self):
+        must_adjust_gauge = self.gauge_bar.GetRange() == 0 or self.gauge_bar.GetRange() == BIG_VALUE
+        if must_adjust_gauge:
+            self.adjust_gauge()
 
+    def adjust_gauge(self):
+        self.length = self.get_current_video_length()
+
+        if self.length == 0:
+            self.set_gauge_bar_empty()
+        else:
+            self.gauge_bar.SetRange(self.length)
+
+    def set_gauge_bar_empty(self):
+        self.gauge_bar.SetRange(BIG_VALUE)
+        self.gauge_bar.SetValue(0)
 
 
 app = wx.App(False)
