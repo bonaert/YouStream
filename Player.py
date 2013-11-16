@@ -260,12 +260,7 @@ class Player(wx.Frame):
             return self.media_player.get_current_video_length()
 
     def get_current_video_time(self):
-        try:
-            a = self.media_player.get_current_video_time()
-            print a, "\n", a, "\n", a
-            return a
-        except AttributeError:
-            return self.get_approximate_video_time()
+        return self.media_player.get_current_video_time() or self.get_approximate_video_time()
 
     def get_approximate_video_time(self):
         if self.gauge_bar_offset:
