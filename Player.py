@@ -187,7 +187,8 @@ class Player(wx.Frame):
         self.Close(True)
 
     def on_previous(self, evt):
-        if self.current_song_index != 0:
+        is_first_song = self.current_song_index == 0
+        if not is_first_song:
             self.start_downloading_if_needed(self.current_song_index - 1)
             self.play_current_song_when_big_enough()
 
@@ -214,35 +215,22 @@ class Player(wx.Frame):
         self.play_current_song_when_big_enough()
 
     def is_video_playing(self):
-        return self.is_playing
-
-    def get_current_length(self):
-        return 0
+        return self.media_player.is_playing()
 
     def play_file(self, path):
         try:
-            self.start_playing_file(path)
+            self.media_player.play_file(path)
         except IndexError as e:
             self.raise_error_window(path)
             print (e.message)
 
-    def start_playing_file(self, path):
-        print("Playing: ", path)
-        #if not self.mediaPlayer:
-        # todo: don't forget to see what this line was for
-        # todo: make notes about decisions
-        # self.mediaPlayer.Quit()
-        #self.mediaPlayer.Start()
-        self.media_player.play_file(path)
-        #if loop:
-        #   self.mediaPlayer.Loop(0)
-
-        self.video_being_played = path
-        self.playing = True
-
     def raise_error_window(self, path):
         message = "Unable to load %s: Unsupported format?" % path
         wx.MessageBox(message, "ERROR", wx.ICON_ERROR | wx.OK)
+
+    def get_search_terms(self):
+        return self.search_terms_input.GetValue()
+
 
 app = wx.App(False)
 frame = Player()
