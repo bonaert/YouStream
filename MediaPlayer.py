@@ -45,3 +45,10 @@ class MediaPlayer(object):
 
     def get_current_video_time(self):
         return self.media_player.GetTimePos()
+
+    def get_current_video_length(self):
+        length = self.media_player.GetTimeLength()
+        if length:
+            return int(length)
+        else:
+            return 0
