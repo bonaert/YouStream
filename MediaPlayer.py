@@ -43,7 +43,7 @@ class MediaPlayer(object):
         self.play_file(path)
         self.media_player.Loop(0)
 
-    def get_current_video_time(self):
+    def get_current_video_time_position(self):
         time_position = self.media_player.GetTimePos()
         if time_position:
             return int(time_position)
