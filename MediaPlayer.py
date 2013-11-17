@@ -38,10 +38,6 @@ class MediaPlayer(object):
         self.current_video_path = path
         self.is_paused = False
 
-    def loop_file(self, path):
-        self.media_player.Loop(3)
-        self.play_file(path)
-
     def get_current_video_time_position(self):
         try:
             return int(self.media_player.GetTimePos())

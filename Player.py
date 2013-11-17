@@ -199,9 +199,7 @@ class Player(wx.Frame):
 
     def must_restart_video(self):
         is_downloading = self.downloader and self.downloader.is_downloading()
-
-        video_stopped = not (self.media_player.is_video_paused() or self.is_video_playing())
-        return video_stopped and is_downloading
+        return not self.is_video_playing() and is_downloading and self.get_current_video_time_position() > 2
 
     def on_timer(self, evt):
         # todo: if, for some reason (SLOW internet), the media player goes to the end of the file
@@ -209,6 +207,7 @@ class Player(wx.Frame):
 
         must_restart_video = self.must_restart_video()
         if must_restart_video:
+            print "Restarting"
             self.restart_video()
 
         if self.is_video_playing():
@@ -311,6 +310,7 @@ class Player(wx.Frame):
     def set_gauge_bar_empty(self):
         self.gauge_bar.SetRange(BIG_VALUE)
         self.gauge_bar.SetValue(0)
+
 
 
 app = wx.App(False)
