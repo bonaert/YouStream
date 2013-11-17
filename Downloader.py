@@ -2,7 +2,7 @@
 from Video import Video
 import utils
 
-DEFAULT_SIZE = 1 * 1024 ** 2  # 1 MB
+DEFAULT_SIZE = 2 * 1024 ** 2  # 2 MB
 
 
 class Downloader(object):
@@ -129,9 +129,11 @@ class Downloader(object):
 
     def wait_while_video_is_small(self, index, size=DEFAULT_SIZE):
         self.check_index(index)
-        return self.videos[index].wait_while_file_is_small(size)
+        self.videos[index].wait_while_file_is_small(size)
 
     def wait_while_current_video_is_small(self, size=DEFAULT_SIZE):
+        print DEFAULT_SIZE
+        print size
         self.current_video.wait_while_file_is_small(size)
 
     def destroy(self):
