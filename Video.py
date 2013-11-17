@@ -146,12 +146,11 @@ class Video(object):
         self.download_subprocess = None
         self.pool = None
 
-
     def stop_downloading(self):
-        raise NotImplementedError
+        raise self.pool.terminate()
 
     def is_file_size_greater_than(self, path, size):
-        return os.path.exists(path) and os.path.getsize(path) > size
+        return os.path.exists(path) and os.path.getsize(path) >= size
 
     def wait_while_file_is_small(self, size):
         self.check_download_has_started()
@@ -161,14 +160,15 @@ class Video(object):
         print(self.file_path)
         while not self.is_downloaded and not self.is_file_size_greater_than(self.file_path, size):
             time.sleep(interval)
-            print("File is still too small")
+            size = os.path.exists(self.file_path) and os.path.getsize(self.file_path)
+            print("File is still too small: %d MB" % (size // 1024**2))
 
     def has_been_downloaded(self):
         return self.is_downloaded
 
     def get_file_size(self):
         self.check_download_has_started()
-        return os.path.getsize(self.file_path)
+        return (os.path.exists(self.file_path) and os.path.getsize(self.file_path)) or 0
 
     def check_download_has_started(self):
         if not (self.is_downloaded or self.is_downloading):
