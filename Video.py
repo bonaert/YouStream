@@ -84,6 +84,16 @@ class Video(object):
         self.check_download_has_started()
         return self.file_path
 
+    def get_file_size(self):
+        self.check_download_has_started()
+        return (os.path.exists(self.file_path) and os.path.getsize(self.file_path)) or 0
+
+    def has_been_downloaded(self):
+        return self.is_downloaded
+
+    def has_file_been_created(self):
+        return self.is_downloading or self.is_downloaded
+
     def download(self):
         if not self.is_downloaded:
             self.start_download()
@@ -149,30 +159,20 @@ class Video(object):
     def stop_downloading(self):
         raise self.pool.terminate()
 
-    def is_file_size_greater_than(self, path, size):
-        return os.path.exists(path) and os.path.getsize(path) >= size
-
     def wait_while_file_is_small(self, size):
         self.check_download_has_started()
         self.wait_while_file_is_smaller_than(size)
 
     def wait_while_file_is_smaller_than(self, size, interval=0.2):
-        print(self.file_path)
-        while not self.is_downloaded and not self.is_file_size_greater_than(self.file_path, size):
+        while self.is_file_is_too_small(size):
             time.sleep(interval)
-            size = os.path.exists(self.file_path) and os.path.getsize(self.file_path)
-            print("File is still too small: %d MB" % (size // 1024**2))
 
-    def has_been_downloaded(self):
-        return self.is_downloaded
+    def is_file_is_too_small(self, size):
+        return not self.is_downloaded and not self.is_file_size_greater_than(self.file_path, size)
 
-    def get_file_size(self):
-        self.check_download_has_started()
-        return (os.path.exists(self.file_path) and os.path.getsize(self.file_path)) or 0
+    def is_file_size_greater_than(self, path, size):
+        return os.path.exists(path) and os.path.getsize(path) > size
 
     def check_download_has_started(self):
         if not (self.is_downloaded or self.is_downloading):
             raise Exception("Download has not started")
-
-    def has_file_been_created(self):
-        return self.is_downloading or self.is_downloaded
