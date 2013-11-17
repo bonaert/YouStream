@@ -7,7 +7,7 @@ from multiprocessing.pool import ThreadPool
 
 
 class Video(object):
-    def __init__(self, metadata_entry, index, directory, max_download_rate=200):
+    def __init__(self, metadata_entry, index, directory, max_download_rate=2000):
         self.author = self.get_author_from_metadata(metadata_entry)
         self.title = self.get_title_from_metadata(metadata_entry)
         self.url = self.get_url_from_metadata(metadata_entry)
@@ -157,7 +157,8 @@ class Video(object):
         self.pool = None
 
     def stop_downloading(self):
-        raise self.pool.terminate()
+        if self.pool:
+            self.pool.terminate()
 
     def wait_while_file_is_small(self, size):
         self.check_download_has_started()
