@@ -108,7 +108,11 @@ class Video(object):
         print("Wait is over. Download ended")
 
     def get_incomplete_file_path(self):
-        return "%s%s.mp4.part" % (self.directory, self.title)
+        return self.get_finished_file_path() + '.part'
+
+    def get_finished_file_path(self):
+        path = "%s%s.mp4" % (self.directory, self.title)
+        return path.replace("\"", "'")
 
     def start_download_subprocess(self):
         args = self.get_download_process_arguments()
@@ -142,8 +146,6 @@ class Video(object):
         self.download_subprocess = None
         self.pool = None
 
-    def get_finished_file_path(self):
-        return "%s%s.mp4" % (self.directory, self.title)
 
     def stop_downloading(self):
         raise NotImplementedError
