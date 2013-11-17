@@ -5,11 +5,11 @@ import Queue
 class MediaPlayer(object):
     def __init__(self, mplayer_controller):
         self.media_player = mplayer_controller
-        self.is_paused = False
+        self.is_paused = True
         self.current_video_path = None
 
     def is_video_playing(self):
-        return self.media_player.playing
+        return not self.is_video_paused() and self.media_player.playing
 
     def is_video_paused(self):
         return self.is_paused
@@ -18,12 +18,12 @@ class MediaPlayer(object):
         return self.current_video_path
 
     def pause(self):
-        if self.is_playing:
+        if not self.is_paused:
             self.invert_player_paused_state()
             self.is_paused = True
 
     def unpause(self):
-        if not self.is_playing:
+        if self.is_paused:
             self.invert_player_paused_state()
             self.is_paused = False
 
@@ -31,33 +31,27 @@ class MediaPlayer(object):
         self.media_player.Pause()
 
     def reset(self):
-        self.media_player.Seek(0, type_=1)
+        self.media_player.Seek(0, type_=2)
 
     def play_file(self, path):
-        #if not self.mediaPlayer:
-        # todo: don't forget to see what this line was for
-        # todo: make notes about decisions
-        # self.mediaPlayer.Quit()
-        #self.mediaPlayer.Start()
         self.media_player.Loadfile(path)
         self.current_video_path = path
-        self.is_playing = True
         self.is_paused = False
 
     def loop_file(self, path):
+        self.media_player.Loop(3)
         self.play_file(path)
-        self.media_player.Loop(0)
 
     def get_current_video_time_position(self):
         try:
             return int(self.media_player.GetTimePos())
-        except ValueError, Queue.Empty:
+        except (ValueError, TypeError, Queue.Empty):
             pass
 
     def get_current_video_length(self):
         try:
             return int(self.media_player.GetTimeLength())
-        except ValueError, Queue.Empty:
+        except (ValueError, Queue.Empty):
             return 0
 
     def destroy(self):
