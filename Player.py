@@ -22,17 +22,10 @@ class Player(wx.Frame):
 
         # Download
         self.downloader = None
-        self.pool = None
-        self.is_downloading = False
-        self.file_being_downloaded = None
-        self.index_of_song_being_downloaded = 0
-        self.number_of_available_videos = 0
 
         # Player
-        self.is_watching = False
-        self.video_being_played = None
         self.length = None
-        self.gauge_bar_offset = 0
+        self.video_time_position = 0
         self.current_video_index = 0
 
         self.directory = utils.make_directory(directory)
@@ -165,7 +158,7 @@ class Player(wx.Frame):
         dialog.Destroy()
 
     def on_media_started(self, evt):
-        self.gauge_bar_offset = 0
+        self.video_time_position = 0
         self.length = self.get_current_video_length()
         self.adjust_gauge()
         print("Length of file: %d" % self.length)
@@ -204,9 +197,24 @@ class Player(wx.Frame):
         self.download_first_video()
         self.play_current_video_when_big_enough()
 
+    def must_restart_video(self):
+        is_downloading = self.downloader and self.downloader.is_downloading()
+
+        video_stopped = not (self.media_player.is_video_paused() or self.is_video_playing())
+        return video_stopped and is_downloading
+
     def on_timer(self, evt):
+        # todo: if, for some reason (SLOW internet), the media player goes to the end of the file
+        # todo: it will stop and dont try to continue when new contents are ready. Fix this!
+
+        must_restart_video = self.must_restart_video()
+        if must_restart_video:
+            self.restart_video()
+
         if self.is_video_playing():
+            self.video_time_position = self.get_current_video_time_position()
             self.update_gauge()
+
 
 
 
@@ -223,6 +231,9 @@ class Player(wx.Frame):
 
     def play_current_video_when_big_enough(self):
         self.downloader.wait_while_current_video_is_small()
+        self.play_current_video()
+
+    def play_current_video(self):
         path = self.downloader.get_current_video_file_path()
         self.play_file(path)
 
@@ -232,6 +243,11 @@ class Player(wx.Frame):
     def raise_error_window(self, path):
         message = "Unable to load %s: Unsupported format?" % path
         wx.MessageBox(message, "ERROR", wx.ICON_ERROR | wx.OK)
+
+    def restart_video(self):
+        path = self.downloader.get_current_video_file_path()
+        self.media_player.play_current_video_at_time_position(path, self.video_time_position)
+
 
 
 
@@ -262,12 +278,12 @@ class Player(wx.Frame):
         else:
             return self.media_player.get_current_video_length()
 
-    def get_current_video_time(self):
-        return self.media_player.get_current_video_time() or self.get_approximate_video_time()
+    def get_current_video_time_position(self):
+        return self.media_player.get_current_video_time_position() or self.get_approximate_video_time_position()
 
-    def get_approximate_video_time(self):
-        if self.gauge_bar_offset:
-            return self.gauge_bar_offset + TIMER_INTERVAL
+    def get_approximate_video_time_position(self):
+        if self.video_time_position:
+            return self.video_time_position + TIMER_INTERVAL
         else:
             return 0
 
@@ -276,11 +292,10 @@ class Player(wx.Frame):
 
     def update_gauge(self):
         if self.is_video_playing():
-            self.adjust_gauge_if_needed()
-            self.gauge_bar_offset = self.get_current_video_time()
-            self.gauge_bar.SetValue(self.gauge_bar_offset)
+            self.adjust_gauge_range_if_needed()
+            self.gauge_bar.SetValue(self.video_time_position)
 
-    def adjust_gauge_if_needed(self):
+    def adjust_gauge_range_if_needed(self):
         must_adjust_gauge = self.gauge_bar.GetRange() == 0 or self.gauge_bar.GetRange() == BIG_VALUE
         if must_adjust_gauge:
             self.adjust_gauge()
@@ -301,5 +316,3 @@ class Player(wx.Frame):
 app = wx.App(False)
 frame = Player()
 app.MainLoop()
-
-#todo: on watch also
