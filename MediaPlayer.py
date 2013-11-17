@@ -57,3 +57,7 @@ class MediaPlayer(object):
 
     def destroy(self):
         self.media_player.Quit()
+
+    def play_current_video_at_time_position(self, path, video_time_position):
+        self.play_file(path)
+        self.media_player.Seek(video_time_position, type_=2)
