@@ -1,14 +1,18 @@
 # coding=utf-8
+import Queue
 
 
 class MediaPlayer(object):
     def __init__(self, mplayer_controller):
         self.media_player = mplayer_controller
-        self.is_playing = False
+        self.is_paused = False
         self.current_video_path = None
 
     def is_video_playing(self):
-        return self.is_playing
+        return self.media_player.playing
+
+    def is_video_paused(self):
+        return self.is_paused
 
     def get_current_video_path(self):
         return self.current_video_path
@@ -16,12 +20,12 @@ class MediaPlayer(object):
     def pause(self):
         if self.is_playing:
             self.invert_player_paused_state()
-            self.is_playing = False
+            self.is_paused = True
 
     def unpause(self):
         if not self.is_playing:
             self.invert_player_paused_state()
-            self.is_playing = True
+            self.is_paused = False
 
     def invert_player_paused_state(self):
         self.media_player.Pause()
@@ -38,21 +42,22 @@ class MediaPlayer(object):
         self.media_player.Loadfile(path)
         self.current_video_path = path
         self.is_playing = True
+        self.is_paused = False
 
     def loop_file(self, path):
         self.play_file(path)
         self.media_player.Loop(0)
 
     def get_current_video_time_position(self):
-        time_position = self.media_player.GetTimePos()
-        if time_position:
-            return int(time_position)
+        try:
+            return int(self.media_player.GetTimePos())
+        except ValueError, Queue.Empty:
+            pass
 
     def get_current_video_length(self):
-        length = self.media_player.GetTimeLength()
-        if length:
-            return int(length)
-        else:
+        try:
+            return int(self.media_player.GetTimeLength())
+        except ValueError, Queue.Empty:
             return 0
 
     def destroy(self):
