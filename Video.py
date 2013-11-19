@@ -121,8 +121,15 @@ class Video(object):
         return self.get_finished_file_path() + '.part'
 
     def get_finished_file_path(self):
-        path = "%s%s.mp4" % (self.directory, self.title)
+        title = self.get_title()
+        path = "%s%s.mp4" % (self.directory, title)
         return path.replace("\"", "'")
+
+    def get_title(self):
+        if self.title[-1] == '*':
+            return self.title[:-1]
+        else:
+            return self.title
 
     def start_download_subprocess(self):
         args = self.get_download_process_arguments()
@@ -165,7 +172,9 @@ class Video(object):
         self.wait_while_file_is_smaller_than(size)
 
     def wait_while_file_is_smaller_than(self, size, interval=0.2):
+        print "Required size: %d " % size
         while self.is_file_is_too_small(size):
+            print "Actual size : %d " % (os.path.exists(self.file_path) and os.path.getsize(self.file_path))
             time.sleep(interval)
 
     def is_file_is_too_small(self, size):
