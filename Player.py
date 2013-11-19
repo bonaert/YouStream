@@ -3,6 +3,7 @@ import os
 import wx
 
 import MplayerCtrl as mpc
+import time
 from Downloader import Downloader
 from MediaPlayer import MediaPlayer
 import utils
@@ -262,6 +263,7 @@ class Player(wx.Frame):
     def start_download(self, index):
         self.current_video_index = index
         self.downloader.download_video_with_index(index)
+        time.sleep(2)
 
 
 
