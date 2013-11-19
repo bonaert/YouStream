@@ -3,9 +3,8 @@ import os
 import wx
 
 import MplayerCtrl as mpc
-import time
-from Downloader import Downloader
 from MediaPlayer import MediaPlayer
+from PlayerManager import PlayerManager
 import utils
 
 BIG_VALUE = 10 ** 8
@@ -16,18 +15,10 @@ DEFAULT_WIDTH = 800
 DEFAULT_HEIGHT = 800
 
 
-class Player(wx.Frame):
+class PlayerUI(wx.Frame):
     def __init__(self, directory=None):
-        super(Player, self).__init__(parent=None, title="YouStream",
-                                     size=(DEFAULT_WIDTH, DEFAULT_HEIGHT))
-
-        # Download
-        self.downloader = None
-
-        # Player
-        self.length = None
-        self.video_time_position = 0
-        self.current_video_index = 0
+        super(PlayerUI, self).__init__(parent=None, title="YouStream",
+                                       size=(DEFAULT_WIDTH, DEFAULT_HEIGHT))
 
         self.directory = utils.make_directory(directory)
 
@@ -36,6 +27,7 @@ class Player(wx.Frame):
         self.panel.Layout()
         # self.Maximize()
 
+        self.player_manager = PlayerManager(self.media_player, self.directory)
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer)
         self.timer.Start(TIMER_INTERVAL * 1000)
@@ -148,7 +140,7 @@ class Player(wx.Frame):
 
         if dialog.ShowModal() == wx.ID_OK:
             path = dialog.GetPath()
-            self.play_file(path)
+            self.player_manager.open(path)
 
         dialog.Destroy()
 
@@ -159,48 +151,38 @@ class Player(wx.Frame):
         dialog.Destroy()
 
     def on_media_started(self, evt):
-        self.video_time_position = 0
-        self.length = self.get_current_video_length()
-        self.adjust_gauge()
-        print("Length of file: %d" % self.length)
+        self.update_gauge()
+        self.player_manager.on_media_started()
+        length = self.player_manager.get_current_video_length()
+        print("Length of file: %d" % length)
 
     def on_media_finished(self, evt):
-        self.length = 0
         self.set_gauge_bar_empty()
+        self.player_manager.on_media_finished()
 
     def on_exit(self, evt):
         self.media_player.destroy()
-        self.downloader.destroy()
+        self.player_manager.destroy()
         self.Close(True)
 
     def on_previous(self, evt):
-        is_first_song = self.is_playing_first_song()
-        if not is_first_song:
-            self.start_download(self.current_video_index - 1)
-            self.play_current_video_when_big_enough()
+        self.player_manager.on_previous()
 
     def on_pause(self, evt):
-        self.media_player.pause()
+        self.player_manager.on_pause()
 
     def on_play(self, evt):
-        self.media_player.unpause()
+        self.player_manager.on_play()
 
     def on_reset(self, evt):
-        self.media_player.reset()
+        self.player_manager.on_reset()
 
     def on_next(self, evt):
-        self.start_download(self.current_video_index + 1)
-        self.play_current_video_when_big_enough()
+        self.player_manager.on_next()
 
     def on_search(self, evt):
         search_terms = self.get_search_terms()
-        self.downloader = self.build_downloader(search_terms)
-        self.download_first_video()
-        self.play_current_video_when_big_enough()
-
-    def must_restart_video(self):
-        is_downloading = self.downloader and self.downloader.is_downloading()
-        return not self.is_video_playing() and is_downloading and self.get_current_video_time_position() > 2
+        self.player_manager.on_search(search_terms)
 
     def on_timer(self, evt):
         # todo: if, for some reason (SLOW internet), the media player goes to the end of the file
@@ -208,113 +190,78 @@ class Player(wx.Frame):
 
         must_restart_video = self.must_restart_video()
         if must_restart_video:
-            print "Restarting"
+            print "Restarting video."
             self.restart_video()
 
-        if self.is_video_playing():
-            self.video_time_position = self.get_current_video_time_position()
+        if self.player_manager.is_video_playing():
+            self.video_time_position = self.player_manager.get_current_video_time_position()
             self.update_gauge()
 
+        self.player_manager.on_timer()
 
 
 
 
-
-
-    # Media player
-
-    def is_video_playing(self):
-        return self.media_player.is_video_playing()
+    # Helper function
 
     def get_search_terms(self):
         return self.search_terms_input.GetValue().split()
 
-    def play_current_video_when_big_enough(self):
-        self.downloader.wait_while_current_video_is_small()
-        self.play_current_video()
+    def restart_video(self):
+        path = self.player_manager.get_current_video_file_path()
+        video_time_position = self.player_manager.get_current_video_time_position()
+        self.media_player.play_current_video_at_time_position(path, video_time_position)
 
-    def play_current_video(self):
-        path = self.downloader.get_current_video_file_path()
-        self.play_file(path)
+    def must_restart_video(self):
+        is_downloading = self.player_manager.is_downloading()
+        is_video_playing = self.player_manager.is_video_playing()
+        current_time_position = self.player_manager.get_current_video_time_position()
 
-    def play_file(self, path):
-        self.media_player.play_file(path)
+        return not is_video_playing and is_downloading and current_time_position > 2
 
     def raise_error_window(self, path):
         message = "Unable to load %s: Unsupported format?" % path
         wx.MessageBox(message, "ERROR", wx.ICON_ERROR | wx.OK)
 
-    def restart_video(self):
-        path = self.downloader.get_current_video_file_path()
-        self.media_player.play_current_video_at_time_position(path, self.video_time_position)
 
 
 
 
 
-    # Downloader
-
-    def build_downloader(self, search_terms):
-        return Downloader(search_terms, self.directory)
-
-    def download_first_video(self):
-        self.start_download(0)
-
-    def start_download(self, index):
-        self.current_video_index = index
-        self.downloader.download_video_with_index(index)
-        time.sleep(2)
-
-
-
-
-    # Getters and setters
-
-    def is_playing_first_song(self):
-        return self.current_video_index == 0
-
-    def get_current_video_length(self):
-        if self.downloader:
-            return self.downloader.get_current_video_length()
-        else:
-            return self.media_player.get_current_video_length()
-
-    def get_current_video_time_position(self):
-        return self.media_player.get_current_video_time_position() or self.get_approximate_video_time_position()
-
-    def get_approximate_video_time_position(self):
-        if self.video_time_position:
-            return self.video_time_position + TIMER_INTERVAL
-        else:
-            return 0
 
 
     # Gauge
 
     def update_gauge(self):
-        if self.is_video_playing():
-            self.adjust_gauge_range_if_needed()
-            self.gauge_bar.SetValue(self.video_time_position)
-
-    def adjust_gauge_range_if_needed(self):
-        must_adjust_gauge = self.gauge_bar.GetRange() == 0 or self.gauge_bar.GetRange() == BIG_VALUE
-        if must_adjust_gauge:
+        if self.player_manager.is_video_playing():
             self.adjust_gauge()
 
     def adjust_gauge(self):
-        self.length = self.get_current_video_length()
+        if self.must_adjust_gauge():
+            self.adjust_gauge_range()
 
-        if self.length == 0:
+        self.adjust_gauge_value()
+
+    def must_adjust_gauge(self):
+        return self.gauge_bar.GetRange() == 0 or self.gauge_bar.GetRange() == BIG_VALUE
+
+    def adjust_gauge_range(self):
+        length = self.player_manager.get_current_video_length()
+
+        if length == 0:
             self.set_gauge_bar_empty()
         else:
-            self.gauge_bar.SetRange(self.length)
+            self.gauge_bar.SetRange(length)
 
     def set_gauge_bar_empty(self):
         self.gauge_bar.SetRange(BIG_VALUE)
         self.gauge_bar.SetValue(0)
 
+    def adjust_gauge_value(self):
+        video_time_position = self.player_manager.get_current_video_time_position()
+        self.gauge_bar.SetValue(video_time_position)
 
 
 app = wx.App(False)
-frame = Player()
+frame = PlayerUI()
 app.MainLoop()
